@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, log } from "./vite"; // serveStatic não é mais necessário aqui
+import { setupVite, log } from "./vite"; // serveStatic não é necessário
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -13,19 +14,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Ambiente
-const isProd = app.get("env") === "production" || process.env.NODE_ENV === "production";
+const isProd =
+  app.get("env") === "production" || process.env.NODE_ENV === "production";
+
 // Base de arquivos (em dev usamos o projeto, em prod usamos a pasta do build)
 const baseDir = isProd ? __dirname : process.cwd();
 
 /**
  * Servir arquivos estáticos da pasta attached_assets
  * - Em dev: process.cwd()/attached_assets
- * - Em prod: dist/server/attached_assets (copiados no build, se necessário)
+ * - Em prod: dist/server/attached_assets (ou como você copiou no build)
  */
-app.use(
-  "/attached_assets",
-  express.static(path.join(baseDir, "attached_assets"))
-);
+app.use("/attached_assets", express.static(path.join(baseDir, "attached_assets")));
 
 /**
  * Logger básico para respostas JSON das rotas /api
@@ -48,11 +48,7 @@ app.use((req, res, next) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
+      if (logLine.length > 80) logLine = logLine.slice(0, 79) + "…";
       log(logLine);
     }
   });
@@ -74,14 +70,36 @@ app.use((req, res, next) => {
 
   /**
    * Em desenvolvimento: usa Vite (HMR, etc.).
-   * Em produção: serve a build estática do Vite (dist/server/public) e
-   *              faz fallback para index.html para rotas SPA.
+   * Em produção: serve a build estática do Vite (dist/server/public ou dist/public)
+   *              e faz fallback para index.html nas rotas SPA.
    */
   if (!isProd) {
     await setupVite(app, server);
   } else {
-    // Arquivos estáticos gerados pelo Vite: dist/server/public
-    const publicDir = path.join(__dirname, "public");
+    // Tenta os 2 caminhos possíveis do Vite:
+    // A) dist/server/public (quando o server é bundlado em dist/server)
+    // B) dist/public        (quando só o front foi para dist/public)
+    const candidateA = path.join(__dirname, "public");        // dist/server/public
+    const candidateB = path.join(__dirname, "..", "public");  // dist/public
+
+    let publicDir = "";
+    if (fs.existsSync(candidateA)) {
+      publicDir = candidateA;
+    } else if (fs.existsSync(candidateB)) {
+      publicDir = candidateB;
+    } else {
+      // Para facilitar o diagnóstico quando o build do front não foi gerado
+      const msg = `Could not find the build directory for the client app.
+Tried:
+  - ${candidateA}
+  - ${candidateB}
+
+Make sure your client build ran (e.g. "vite build") before starting the server.`;
+      // lançar erro para aparecer no log de deploy
+      throw new Error(msg);
+    }
+
+    // Serve arquivos estáticos do front
     app.use(express.static(publicDir));
 
     // Fallback SPA: qualquer rota que não seja /api retorna index.html
