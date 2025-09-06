@@ -1,0 +1,728 @@
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legion Boss Timer - Gaming Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    destructive: {
+                        DEFAULT: "var(--destructive)",
+                        foreground: "var(--destructive-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                },
+                fontFamily: {
+                    sans: ["Inter", "var(--font-sans)"],
+                }
+            },
+        }
+    };
+    </script>
+    <style>
+        :root {
+            --background: hsl(240 20% 4%);
+            --foreground: hsl(210 20% 88%);
+            --card: hsl(240 15% 8%);
+            --card-foreground: hsl(210 20% 88%);
+            --primary: hsl(45 100% 50%);
+            --primary-foreground: hsl(240 20% 4%);
+            --secondary: hsl(260 50% 15%);
+            --secondary-foreground: hsl(210 20% 88%);
+            --muted: hsl(240 10% 15%);
+            --muted-foreground: hsl(210 10% 60%);
+            --accent: hsl(280 60% 20%);
+            --accent-foreground: hsl(45 100% 50%);
+            --destructive: hsl(0 60% 50%);
+            --destructive-foreground: hsl(0 0% 100%);
+            --border: hsl(240 15% 15%);
+            --input: hsl(240 15% 12%);
+            --ring: hsl(45 100% 50%);
+            --radius: 0.75rem;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, hsl(240 20% 4%) 0%, hsl(260 30% 6%) 100%);
+            min-height: 100vh;
+        }
+        
+        .gaming-glow {
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+        
+        .timer-active {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+            50% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.7); }
+        }
+        
+        .status-alive { color: #10b981; }
+        .status-dead { color: #ef4444; }
+        .status-soon { color: #f59e0b; }
+        
+        .cyber-border {
+            border: 1px solid;
+            border-image: linear-gradient(45deg, hsl(45 100% 50%), hsl(280 60% 50%)) 1;
+        }
+    </style>
+</head>
+
+<body class="bg-background text-foreground">
+    <!-- @COMPONENT: AppLayout [Main application shell with sidebar and content area] -->
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <!-- @COMPONENT: Sidebar [Navigation and quick actions] -->
+        <div class="w-64 bg-card border-r border-border flex flex-col">
+            <!-- Logo and Title -->
+            <div class="p-6 border-b border-border">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-dragon text-primary-foreground text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-foreground">Legion Timer</h1>
+                        <p class="text-sm text-muted-foreground">Boss Management</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <nav class="flex-1 p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg bg-accent text-accent-foreground gaming-glow" data-tab="dashboard">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" data-tab="bosses">
+                            <i class="fas fa-skull"></i>
+                            <span>Boss Timers</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" data-tab="members">
+                            <i class="fas fa-users"></i>
+                            <span>Legion Members</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" data-tab="history">
+                            <i class="fas fa-history"></i>
+                            <span>History</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors" data-tab="settings">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- Quick Actions -->
+            <div class="p-4 border-t border-border">
+                <button class="w-full bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors" data-action="add-boss">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add Boss
+                </button>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Sidebar -->
+        
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-auto">
+            <!-- Header -->
+            <!-- @COMPONENT: Header [Top navigation with notifications and user info] -->
+            <header class="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-foreground" data-bind="currentTab.title">Dashboard</h2>
+                    <p class="text-muted-foreground" data-bind="currentTab.subtitle">Monitor active boss timers and legion status</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <button class="p-2 rounded-lg hover:bg-muted transition-colors relative">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center" data-bind="notificationCount">3</span>
+                        </button>
+                    </div>
+                    <!-- User Avatar -->
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-primary-foreground"></i>
+                        </div>
+                        <span class="text-foreground font-medium" data-bind="user.name" data-mock="true">Guild Master</span>
+                    </div>
+                </div>
+            </header>
+            <!-- @END_COMPONENT: Header -->
+            
+            <!-- Dashboard Content -->
+            <!-- @COMPONENT: DashboardTab [Main dashboard view with overview widgets] -->
+            <div id="dashboard-tab" class="p-6">
+                <!-- Stats Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-card rounded-lg p-6 border border-border">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-muted-foreground text-sm">Active Timers</p>
+                                <p class="text-3xl font-bold text-primary" data-bind="stats.activeTimers">5</p>
+                            </div>
+                            <div class="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-clock text-primary text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-card rounded-lg p-6 border border-border">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-muted-foreground text-sm">Bosses Alive</p>
+                                <p class="text-3xl font-bold status-alive" data-bind="stats.bossesAlive">8</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-heart text-green-500 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-card rounded-lg p-6 border border-border">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-muted-foreground text-sm">Legion Members</p>
+                                <p class="text-3xl font-bold text-blue-400" data-bind="stats.members">24</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-400/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-users text-blue-400 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-card rounded-lg p-6 border border-border">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-muted-foreground text-sm">Upcoming Spawns</p>
+                                <p class="text-3xl font-bold status-soon" data-bind="stats.upcomingSpawns">3</p>
+                            </div>
+                            <div class="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Active Timers Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Current Active Timers -->
+                    <div class="bg-card rounded-lg p-6 border border-border">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-semibold text-foreground">Active Timers</h3>
+                            <button class="text-primary hover:text-primary/80 transition-colors">
+                                <i class="fas fa-refresh"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- @MAP: activeTimers.map(timer => ( -->
+                        <div class="space-y-4">
+                            <div class="cyber-border rounded-lg p-4 timer-active" data-mock="true">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-destructive rounded-full flex items-center justify-center">
+                                            <i class="fas fa-dragon text-destructive-foreground text-sm"></i>
+                                        </div>
+                                        <span class="font-medium" data-bind="timer.bossName">Crimson Dragon</span>
+                                    </div>
+                                    <span class="text-sm bg-destructive text-destructive-foreground px-2 py-1 rounded">DEAD</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-muted-foreground text-sm">Respawn in:</span>
+                                    <span class="text-primary font-bold text-lg" data-bind="timer.timeRemaining">02:34:15</span>
+                                </div>
+                                <div class="w-full bg-muted rounded-full h-2 mt-2">
+                                    <div class="bg-primary h-2 rounded-full" style="width: 65%" data-bind="timer.progress"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-border rounded-lg p-4" data-mock="true">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-skull text-white text-sm"></i>
+                                        </div>
+                                        <span class="font-medium" data-bind="timer.bossName">Shadow Lord</span>
+                                    </div>
+                                    <span class="text-sm bg-destructive text-destructive-foreground px-2 py-1 rounded">DEAD</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-muted-foreground text-sm">Respawn in:</span>
+                                    <span class="text-primary font-bold text-lg" data-bind="timer.timeRemaining">01:47:23</span>
+                                </div>
+                                <div class="w-full bg-muted rounded-full h-2 mt-2">
+                                    <div class="bg-primary h-2 rounded-full" style="width: 45%" data-bind="timer.progress"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="border border-border rounded-lg p-4" data-mock="true">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-leaf text-white text-sm"></i>
+                                        </div>
+                                        <span class="font-medium" data-bind="timer.bossName">Forest Guardian</span>
+                                    </div>
+                                    <span class="text-sm bg-green-600 text-white px-2 py-1 rounded">ALIVE</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-muted-foreground text-sm">Status:</span>
+                                    <span class="text-green-400 font-medium">Ready for hunt</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                    
+                    <!-- Recent Activity -->
+                    <div class="bg-card rounded-lg p-6 border border-border">
+                        <h3 class="text-xl font-semibold text-foreground mb-6">Recent Activity</h3>
+                        
+                        <!-- @MAP: recentActivity.map(activity => ( -->
+                        <div class="space-y-4">
+                            <div class="flex items-start space-x-3" data-mock="true">
+                                <div class="w-8 h-8 bg-destructive rounded-full flex items-center justify-center mt-1">
+                                    <i class="fas fa-skull text-destructive-foreground text-xs"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-foreground font-medium" data-bind="activity.description">Crimson Dragon killed by Legion Squad Alpha</p>
+                                    <p class="text-muted-foreground text-sm" data-bind="activity.timestamp">2 minutes ago</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start space-x-3" data-mock="true">
+                                <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center mt-1">
+                                    <i class="fas fa-clock text-primary-foreground text-xs"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-foreground font-medium" data-bind="activity.description">Timer set for Ice Queen respawn</p>
+                                    <p class="text-muted-foreground text-sm" data-bind="activity.timestamp">15 minutes ago</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start space-x-3" data-mock="true">
+                                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mt-1">
+                                    <i class="fas fa-user-plus text-white text-xs"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-foreground font-medium" data-bind="activity.description">New member joined: DarkKnight99</p>
+                                    <p class="text-muted-foreground text-sm" data-bind="activity.timestamp">1 hour ago</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start space-x-3" data-mock="true">
+                                <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mt-1">
+                                    <i class="fas fa-heart text-white text-xs"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-foreground font-medium" data-bind="activity.description">Forest Guardian respawned</p>
+                                    <p class="text-muted-foreground text-sm" data-bind="activity.timestamp">2 hours ago</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                        
+                        <button class="w-full mt-4 text-primary hover:text-primary/80 transition-colors text-sm">
+                            View all activity →
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: DashboardTab -->
+            
+            <!-- Boss Management Tab -->
+            <!-- @COMPONENT: BossTab [Boss timer management interface] -->
+            <div id="bosses-tab" class="p-6 hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-foreground">Boss Management</h3>
+                    <button class="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors" data-action="add-boss">
+                        <i class="fas fa-plus mr-2"></i>
+                        Add New Boss
+                    </button>
+                </div>
+                
+                <!-- Boss List Table -->
+                <div class="bg-card rounded-lg border border-border overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-muted">
+                                <tr>
+                                    <th class="text-left p-4 text-muted-foreground font-medium">Boss</th>
+                                    <th class="text-left p-4 text-muted-foreground font-medium">Status</th>
+                                    <th class="text-left p-4 text-muted-foreground font-medium">Location</th>
+                                    <th class="text-left p-4 text-muted-foreground font-medium">Respawn Timer</th>
+                                    <th class="text-left p-4 text-muted-foreground font-medium">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- @MAP: bosses.map(boss => ( -->
+                                <tr class="border-t border-border hover:bg-muted/50 transition-colors" data-mock="true">
+                                    <td class="p-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-destructive rounded-full flex items-center justify-center">
+                                                <i class="fas fa-dragon text-destructive-foreground"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-foreground" data-bind="boss.name">Crimson Dragon</p>
+                                                <p class="text-sm text-muted-foreground" data-bind="boss.level">Level 85</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-destructive text-destructive-foreground" data-bind="boss.status">
+                                            Dead
+                                        </span>
+                                    </td>
+                                    <td class="p-4 text-muted-foreground" data-bind="boss.location">Fire Caverns</td>
+                                    <td class="p-4">
+                                        <span class="text-primary font-bold" data-bind="boss.respawnTime">02:34:15</span>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:text-primary/80 transition-colors" data-action="edit-boss">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-destructive hover:text-destructive/80 transition-colors" data-action="delete-boss">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            <button class="text-green-500 hover:text-green-500/80 transition-colors" data-action="mark-killed">
+                                                <i class="fas fa-skull"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <tr class="border-t border-border hover:bg-muted/50 transition-colors" data-mock="true">
+                                    <td class="p-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-leaf text-white"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium text-foreground" data-bind="boss.name">Forest Guardian</p>
+                                                <p class="text-sm text-muted-foreground" data-bind="boss.level">Level 72</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-600 text-white" data-bind="boss.status">
+                                            Alive
+                                        </span>
+                                    </td>
+                                    <td class="p-4 text-muted-foreground" data-bind="boss.location">Enchanted Forest</td>
+                                    <td class="p-4">
+                                        <span class="text-green-400 font-medium">Ready</span>
+                                    </td>
+                                    <td class="p-4">
+                                        <div class="flex space-x-2">
+                                            <button class="text-primary hover:text-primary/80 transition-colors" data-action="edit-boss">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-destructive hover:text-destructive/80 transition-colors" data-action="delete-boss">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            <button class="text-green-500 hover:text-green-500/80 transition-colors" data-action="mark-killed">
+                                                <i class="fas fa-skull"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <!-- @END_MAP )) -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: BossTab -->
+            
+            <!-- Legion Members Tab -->
+            <!-- @COMPONENT: MembersTab [Legion member management] -->
+            <div id="members-tab" class="p-6 hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-foreground">Legion Members</h3>
+                    <button class="bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors" data-action="add-member">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Add Member
+                    </button>
+                </div>
+                
+                <!-- Members Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- @MAP: members.map(member => ( -->
+                    <div class="bg-card rounded-lg p-6 border border-border" data-mock="true">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-primary-foreground"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-foreground" data-bind="member.name">DragonSlayer</h4>
+                                <p class="text-sm text-muted-foreground" data-bind="member.role">Squad Leader</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">Level:</span>
+                                <span class="text-foreground font-medium" data-bind="member.level">89</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">Class:</span>
+                                <span class="text-foreground font-medium" data-bind="member.class">Warrior</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">Status:</span>
+                                <span class="text-green-400 font-medium" data-bind="member.status">Online</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex space-x-2">
+                            <button class="flex-1 bg-accent text-accent-foreground px-3 py-2 rounded text-sm hover:bg-accent/80 transition-colors" data-action="message-member">
+                                Message
+                            </button>
+                            <button class="px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-action="edit-member">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-card rounded-lg p-6 border border-border" data-mock="true">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <div class="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
+                                <i class="fas fa-magic text-white"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-foreground" data-bind="member.name">ShadowMage</h4>
+                                <p class="text-sm text-muted-foreground" data-bind="member.role">Mage</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">Level:</span>
+                                <span class="text-foreground font-medium" data-bind="member.level">84</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">Class:</span>
+                                <span class="text-foreground font-medium" data-bind="member.class">Mage</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-muted-foreground">Status:</span>
+                                <span class="text-yellow-400 font-medium" data-bind="member.status">Away</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex space-x-2">
+                            <button class="flex-1 bg-accent text-accent-foreground px-3 py-2 rounded text-sm hover:bg-accent/80 transition-colors" data-action="message-member">
+                                Message
+                            </button>
+                            <button class="px-3 py-2 text-muted-foreground hover:text-foreground transition-colors" data-action="edit-member">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </div>
+            <!-- @END_COMPONENT: MembersTab -->
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AppLayout -->
+    
+    <!-- Add Boss Modal -->
+    <!-- @COMPONENT: AddBossModal [Modal for adding new boss timers] -->
+    <div id="add-boss-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center z-50" data-implementation="Modal should be hidden by default and shown when add boss button is clicked">
+        <div class="bg-card rounded-lg p-6 w-full max-w-md mx-4 border border-border">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-foreground">Add New Boss</h3>
+                <button class="text-muted-foreground hover:text-foreground transition-colors" data-action="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form class="space-y-4" data-event="submit:handleAddBoss">
+                <div>
+                    <label class="block text-sm font-medium text-foreground mb-2">Boss Name</label>
+                    <input type="text" class="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Enter boss name" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-foreground mb-2">Level</label>
+                    <input type="number" class="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Boss level" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-foreground mb-2">Location</label>
+                    <input type="text" class="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Boss location" required>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-foreground mb-2">Respawn Time (hours)</label>
+                    <input type="number" class="w-full px-3 py-2 bg-input border border-border rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" placeholder="Respawn time in hours" required>
+                </div>
+                
+                <div class="flex space-x-3 mt-6">
+                    <button type="button" class="flex-1 px-4 py-2 border border-border rounded-lg text-foreground hover:bg-muted transition-colors" data-action="close-modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                        Add Boss
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AddBossModal -->
+    
+    <script>
+    (function() {
+        // Tab switching functionality
+        const tabButtons = document.querySelectorAll('[data-tab]');
+        const tabContents = document.querySelectorAll('[id$="-tab"]');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const targetTab = button.getAttribute('data-tab');
+                
+                // Remove active class from all buttons
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('bg-accent', 'text-accent-foreground', 'gaming-glow');
+                    btn.classList.add('text-muted-foreground');
+                });
+                
+                // Add active class to clicked button
+                button.classList.add('bg-accent', 'text-accent-foreground', 'gaming-glow');
+                button.classList.remove('text-muted-foreground');
+                
+                // Hide all tab contents
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+                
+                // Show target tab content
+                const targetContent = document.getElementById(targetTab + '-tab');
+                if (targetContent) {
+                    targetContent.classList.remove('hidden');
+                }
+                
+                // Update header title
+                const headerTitle = document.querySelector('[data-bind="currentTab.title"]');
+                const headerSubtitle = document.querySelector('[data-bind="currentTab.subtitle"]');
+                
+                const tabTitles = {
+                    'dashboard': { title: 'Dashboard', subtitle: 'Monitor active boss timers and legion status' },
+                    'bosses': { title: 'Boss Management', subtitle: 'Manage boss timers and spawns' },
+                    'members': { title: 'Legion Members', subtitle: 'Manage legion member roster' },
+                    'history': { title: 'History', subtitle: 'View past boss kills and spawns' },
+                    'settings': { title: 'Settings', subtitle: 'Configure notifications and preferences' }
+                };
+                
+                if (tabTitles[targetTab]) {
+                    headerTitle.textContent = tabTitles[targetTab].title;
+                    headerSubtitle.textContent = tabTitles[targetTab].subtitle;
+                }
+            });
+        });
+        
+        // Modal functionality
+        const modal = document.getElementById('add-boss-modal');
+        const addBossButtons = document.querySelectorAll('[data-action="add-boss"]');
+        const closeModalButtons = document.querySelectorAll('[data-action="close-modal"]');
+        
+        addBossButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            });
+        });
+        
+        closeModalButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            });
+        });
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        });
+        
+        // Timer countdown simulation
+        function updateTimers() {
+            const timerElements = document.querySelectorAll('[data-bind="timer.timeRemaining"]');
+            // TODO: Implement real timer countdown logic with localStorage
+            // This would connect to actual boss timer data
+        }
+        
+        // Notification system
+        function checkNotifications() {
+            // TODO: Implement notification checking logic
+            // This would check for upcoming boss spawns and show browser notifications
+        }
+        
+        // Initialize timers
+        setInterval(updateTimers, 1000);
+        setInterval(checkNotifications, 30000);
+        
+        // Form handling
+        const addBossForm = document.querySelector('[data-event="submit:handleAddBoss"]');
+        if (addBossForm) {
+            addBossForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                // TODO: Implement form submission logic
+                // This would save boss data to localStorage and update the UI
+                console.log('Add boss form submitted');
+            });
+        }
+    })();
+    </script>
+</body>
+</html>
