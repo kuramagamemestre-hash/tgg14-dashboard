@@ -1,8 +1,14 @@
 import { useState, useEffect } from "react";
 import { Boss } from "@shared/schema";
-import { formatTimeRemaining, calculateProgress, getTimeUntilRespawn, getBossStatusColor } from "@/lib/timer-utils";
+import {
+  formatTimeRemaining,
+  calculateProgress,
+  getTimeUntilRespawn,
+  getBossStatusColor,
+} from "@/lib/timer-utils";
 import { cn } from "@/lib/utils";
 import { Snail, Skull, Leaf, Crown, Shield, Flame, RotateCcw } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface BossTimerProps {
   boss: Boss;
@@ -37,14 +43,13 @@ export default function BossTimer({ boss, className, onRevive }: BossTimerProps)
       const updateTimer = () => {
         const remaining = getTimeUntilRespawn(boss.lastKilledAt, boss.respawnTimeHours);
         const prog = calculateProgress(boss.lastKilledAt, boss.respawnTimeHours);
-        
+
         setTimeLeft(remaining);
         setProgress(prog);
       };
 
       updateTimer();
       const interval = setInterval(updateTimer, 1000);
-      
       return () => clearInterval(interval);
     } else {
       setTimeLeft(0);
@@ -53,42 +58,50 @@ export default function BossTimer({ boss, className, onRevive }: BossTimerProps)
   }, [boss.isAlive, boss.lastKilledAt, boss.respawnTimeHours]);
 
   const Icon = iconMap[boss.iconType as keyof typeof iconMap] || Snail;
-  const iconColorClass = colorMap[boss.iconColor as keyof typeof colorMap] || "bg-red-600";
+  const iconColorClass =
+    colorMap[boss.iconColor as keyof typeof colorMap] || "bg-red-600";
   const statusColor = getBossStatusColor(boss);
   const isActive = !boss.isAlive && timeLeft > 0;
 
   return (
-    <div 
+    <div
       className={cn(
         "rounded-lg p-4 border transition-all duration-300",
         isActive ? "cyber-border timer-active" : "border-border",
-        className
+        className,
       )}
       data-testid={`boss-timer-${boss.id}`}
     >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center space-x-3">
-          {boss.imageUrl ? (
-            <div className="w-10 h-10 rounded-lg overflow-hidden border-2 border-primary/30 bg-card">
-              <img 
-                src={boss.imageUrl} 
-                alt={boss.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ) : (
-            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center", iconColorClass)}>
-              <Icon className="text-white" size={16} />
-            </div>
-          )}
+          {/* Avatar do boss */}
+          <Avatar className="size-12 rounded-md bg-card border-2 border-primary/30">
+            <AvatarImage
+              src={boss.imageUrl || ""}
+              alt={boss.name}
+              className="h-full w-full object-contain p-1"
+            />
+            <AvatarFallback
+              className={cn(
+                "h-full w-full rounded-md flex items-center justify-center text-white",
+                iconColorClass,
+              )}
+            >
+              <Icon size={16} />
+            </AvatarFallback>
+          </Avatar>
+
           <div>
-            <span className="font-medium" data-testid={`boss-name-${boss.id}`}>{boss.name}</span>
+            <span className="font-medium" data-testid={`boss-name-${boss.id}`}>
+              {boss.name}
+            </span>
             <p className="text-xs text-muted-foreground">{boss.location}</p>
             {!boss.isAlive && boss.lastKilledBy && (
               <p className="text-xs text-yellow-400">Killed by: {boss.lastKilledBy}</p>
             )}
           </div>
         </div>
+
         <div className="flex items-center gap-2">
           {!boss.isAlive && onRevive && (
             <button
@@ -100,12 +113,13 @@ export default function BossTimer({ boss, className, onRevive }: BossTimerProps)
               <RotateCcw size={12} />
             </button>
           )}
-          <span 
+
+          <span
             className={cn(
               "text-sm px-2 py-1 rounded font-medium",
               boss.isAlive || timeLeft <= 0
                 ? "bg-green-600 text-white"
-                : "bg-destructive text-destructive-foreground"
+                : "bg-destructive text-destructive-foreground",
             )}
             data-testid={`boss-status-${boss.id}`}
           >
@@ -113,26 +127,31 @@ export default function BossTimer({ boss, className, onRevive }: BossTimerProps)
           </span>
         </div>
       </div>
-      
+
       <div className="flex items-center justify-between">
         <span className="text-muted-foreground text-sm">
           {boss.isAlive || timeLeft <= 0 ? "Status:" : "Respawn in:"}
         </span>
-        <span 
+
+        <span
           className={cn(
             "font-bold",
-            boss.isAlive || timeLeft <= 0 ? "text-green-400" : `text-primary text-lg ${statusColor}`
+            boss.isAlive || timeLeft <= 0
+              ? "text-green-400"
+              : `text-primary text-lg ${statusColor}`,
           )}
           data-testid={`boss-timer-display-${boss.id}`}
         >
-          {boss.isAlive || timeLeft <= 0 ? "Ready for hunt" : formatTimeRemaining(timeLeft)}
+          {boss.isAlive || timeLeft <= 0
+            ? "Ready for hunt"
+            : formatTimeRemaining(timeLeft)}
         </span>
       </div>
-      
+
       {!boss.isAlive && timeLeft > 0 && (
         <div className="w-full bg-muted rounded-full h-2 mt-2">
-          <div 
-            className="bg-primary h-2 rounded-full transition-all duration-1000" 
+          <div
+            className="bg-primary h-2 rounded-full transition-all duration-1000"
             style={{ width: `${progress}%` }}
             data-testid={`boss-progress-${boss.id}`}
           />
